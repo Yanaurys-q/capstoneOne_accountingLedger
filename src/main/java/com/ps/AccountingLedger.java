@@ -140,8 +140,9 @@ public class AccountingLedger
             System.out.println("3) Year To Date");
             System.out.println("4) Previous Year");
             System.out.println("5) Search by Vendor");
-            System.out.println("6) Back to Ledger Menu");
-            System.out.print("Choose an option (1-6): ");
+            System.out.println("6) Custom Search");
+            System.out.println("7) Back to Ledger Menu");
+            System.out.print("Choose an option (1-7): ");
             String givenCommand = scanner.nextLine();
 
             switch (givenCommand)
@@ -169,6 +170,9 @@ public class AccountingLedger
                     displayTransactions(filtered, "all");
                     break;
                 case "6":
+                    customSearch(scanner, transactions);
+                    break;
+                case "7":
                     inReports = false;
                     break;
                 default:
@@ -177,12 +181,138 @@ public class AccountingLedger
         }
     }
 
+    private static void customSearch(Scanner scanner, ArrayList<String[]> transactions)
+    {
+        System.out.print("Enter start date (YYYY-MM-DD) or leave blank: ");
+        String startDateStr = scanner.nextLine().trim();
+        System.out.print("Enter end date (YYYY-MM-DD) or leave blank: ");
+        String endDateStr = scanner.nextLine().trim();
+        System.out.print("Enter description or leave blank: ");
+        String description = scanner.nextLine().trim();
+        System.out.print("Enter vendor or leave blank: ");
+        String vendor = scanner.nextLine().trim();
+        System.out.print("Enter amount or leave blank: ");
+        String amountStr = scanner.nextLine().trim();
+
+        ArrayList<String[]> filtered = new ArrayList<>(transactions);
+
+        if (!startDateStr.isEmpty())
+        {
+            filtered = filterByStartDate(filtered, startDateStr);
+        }
+        if (!endDateStr.isEmpty())
+        {
+            filtered = filterByEndDate(filtered, endDateStr);
+        }
+        if (!description.isEmpty())
+        {
+            filtered = filterByDescription(filtered, description);
+        }
+        if (!vendor.isEmpty())
+        {
+            filtered = filterByVendor(filtered, vendor);
+        }
+        if (!amountStr.isEmpty())
+        {
+            filtered = filterByAmount(filtered, amountStr);
+        }
+
+        displayTransactions(filtered, "all");
+    }
+
+    private static ArrayList<String[]> filterByStartDate(ArrayList<String[]> transactions, String startDateStr)
+    {
+        ArrayList<String[]> result = new ArrayList<>();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        try
+        {
+            LocalDate startDate = LocalDate.parse(startDateStr, formatter);
+            for (String[] t : transactions)
+            {
+                try
+                {
+                    LocalDate date = LocalDate.parse(t[0], formatter);
+                    if (!date.isBefore(startDate))
+                    {
+                        result.add(t);
+                    }
+                }
+                catch (Exception ignored) {}
+            }
+        }
+        catch (Exception ignored) {}
+
+        return result;
+    }
+
+    private static ArrayList<String[]> filterByEndDate(ArrayList<String[]> transactions, String endDateStr)
+    {
+        ArrayList<String[]> result = new ArrayList<>();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        try
+        {
+            LocalDate endDate = LocalDate.parse(endDateStr, formatter);
+            for (String[] t : transactions)
+            {
+                try
+                {
+                    LocalDate date = LocalDate.parse(t[0], formatter);
+                    if (!date.isAfter(endDate))
+                    {
+                        result.add(t);
+                    }
+                }
+                catch (Exception ignored) {}
+            }
+        }
+        catch (Exception ignored) {}
+        return result;
+    }
+
+    private static ArrayList<String[]> filterByDescription(ArrayList<String[]> transactions, String description)
+    {
+        ArrayList<String[]> result = new ArrayList<>();
+        for (String[] t : transactions)
+        {
+            if (t[2].toLowerCase().contains(description.toLowerCase()))
+            {
+                result.add(t);
+            }
+        }
+        return result;
+    }
+
+    private static ArrayList<String[]> filterByAmount(ArrayList<String[]> transactions, String amountStr)
+    {
+        ArrayList<String[]> result = new ArrayList<>();
+        try
+        {
+            double amount = Double.parseDouble(amountStr);
+            for (String[] t : transactions)
+            {
+                try
+                {
+                    double amt = Double.parseDouble(t[4]);
+                    if (amt == amount)
+                    {
+                        result.add(t);
+                    }
+                }
+                catch (Exception ignored) {}
+            }
+        }
+        catch (Exception ignored) {}
+
+        return result;
+    }
+
     private static ArrayList<String[]> filterByVendor(ArrayList<String[]> transactions, String vendor)
     {
         ArrayList<String[]> filtered = new ArrayList<>();
+        String search = vendor.toLowerCase();
         for (String[] t : transactions)
         {
-            if (t[3].equalsIgnoreCase(vendor))
+            if (t[3].toLowerCase().contains(search))
             {
                 filtered.add(t);
             }
